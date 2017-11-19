@@ -1,0 +1,161 @@
+#include<stdio.h>
+#include<stdlib.h>
+
+// PRINT-OPTIMAL-PARENS(s,i,j)
+void PrintOptimalParens(int **processMatrix, int startIndex, int endIndex)
+{
+	if (startIndex == endIndex)
+		printf_s("A%d ", startIndex);
+	else
+	{
+		printf_s("( ");
+		PrintOptimalParens(processMatrix, startIndex, processMatrix[startIndex - 1][endIndex - 2]);
+		PrintOptimalParens(processMatrix, processMatrix[startIndex - 1][endIndex - 2] + 1, endIndex);
+		printf_s(")");
+	}
+}
+
+// MATRIX-CHAIN-ORDER(p)
+int MatrixChainOrder(int arrayLength, int *matrixArray)
+{
+	int numMatrix = arrayLength - 1;
+	int **calculateMatrix = (int **)malloc(sizeof(int *) * numMatrix);
+	int **processMatrix = (int **)malloc(sizeof(int *) * (numMatrix - 1));
+	calculateMatrix[0] = malloc(sizeof(int) * numMatrix);
+	calculateMatrix[0][0] = 0;
+	for (int i = 1; i < numMatrix; i++)
+	{
+		calculateMatrix[i] = malloc(sizeof(int) * numMatrix);
+		processMatrix[i - 1] = malloc(sizeof(int) * (numMatrix - 1));
+		calculateMatrix[i][i] = 0;
+	}
+
+	/*for (int i = 1; i < numMatrix; i++)
+	{
+	for (int j = 1; j < numMatrix; j++)
+	{
+	processMatrix[i-1][j-1] = 0;
+	}
+	}*/
+
+	int length;
+	int startIndex;
+	int endOfStartIndex;
+	int midIndex;
+	int endIndex;
+	int tempTimes;
+
+	for (length = 2; length <= numMatrix; length++)
+	{
+		endOfStartIndex = numMatrix - length + 1;
+		for (startIndex = 1; startIndex <= endOfStartIndex; startIndex++)
+		{
+			endIndex = length + startIndex - 1;
+			calculateMatrix[startIndex - 1][endIndex - 1] = INT_MAX;
+			for (midIndex = startIndex; midIndex < endIndex; midIndex++)
+			{
+				tempTimes = calculateMatrix[startIndex - 1][midIndex - 1]
+					+ calculateMatrix[midIndex][endIndex - 1]
+					+ matrixArray[startIndex - 1] * matrixArray[midIndex] * matrixArray[endIndex];
+				if (tempTimes < calculateMatrix[startIndex - 1][endIndex - 1])
+				{
+					calculateMatrix[startIndex - 1][endIndex - 1] = tempTimes;
+					processMatrix[startIndex - 1][endIndex - 2] = midIndex;
+				}
+			}
+		}
+	}
+
+	PrintOptimalParens(processMatrix, 1, numMatrix);
+	printf_s("\n");
+
+	/*for (int i = 1; i < numMatrix; i++)
+	{
+	for (int j = 1; j < numMatrix; j++)
+	{
+	printf_s("%d\t", processMatrix[i-1][j-1]);
+	}
+	printf_s("\n");
+	}*/
+
+	return calculateMatrix[0][numMatrix - 1];
+}
+
+// 15.2-2
+// MEMOIZED-MATRIX-CHAIN(p)
+int MemoizedMatrixChain(int arrayLength, int *matrixArray)
+{
+	int numMatrix = arrayLength - 1;
+	int **caculateMatrix = malloc(sizeof(int *) * numMatrix);
+	for (int i = 0; i < numMatrix; i++)
+	{
+		caculateMatrix[i] = malloc(sizeof(int) * numMatrix);
+		for (int j = 0; j < i; j++)
+		{
+			caculateMatrix[i][j] = 0;
+		}
+		for (int j = i; j < numMatrix; j++)
+		{
+			caculateMatrix[i][j] = INT_MAX;
+		}
+	}
+	int **processMatrix = malloc(sizeof(int *) * (numMatrix - 1));
+	for (int i = 0; i < numMatrix - 1; i++)
+	{
+		processMatrix[i] = malloc(sizeof(int) * (numMatrix - 1));
+		for (int j = 0; j < numMatrix - 1; j++)
+		{
+			processMatrix[i][j] = 0;
+		}
+	}
+	return LookUpChain(caculateMatrix, matrixArray, processMatrix, 1, numMatrix);
+	/*int a = LookUpChain(caculateMatrix, matrixArray, processMatrix, 1, numMatrix);
+	for (int i = 0; i < numMatrix-1; i++)
+	{
+	for (int j = 0; j < numMatrix-1; j++)
+	{
+	printf_s("%d\t", processMatrix[i][j]);
+	}
+	printf_s("\n");
+	}
+	return a;*/
+}
+
+int LookUpChain(int **caculateMatrix, int *matrixArray, int **processMatrix, int startIndex, int endIndex)
+{
+	if (caculateMatrix[startIndex - 1][endIndex - 1] < INT_MAX)
+		return caculateMatrix[startIndex - 1][endIndex - 1];
+	if (startIndex == endIndex)
+	{
+		caculateMatrix[startIndex - 1][endIndex - 1] = 0;
+		return 0;
+	}
+	int midIndex;
+	int tempTimes;
+	for (midIndex = startIndex; midIndex <= endIndex - 1; midIndex++)
+	{
+		tempTimes = LookUpChain(caculateMatrix, matrixArray, processMatrix, startIndex, midIndex)
+			+ LookUpChain(caculateMatrix, matrixArray, processMatrix, midIndex + 1, endIndex)
+			+ matrixArray[startIndex - 1] * matrixArray[midIndex] * matrixArray[endIndex];
+		if (tempTimes < caculateMatrix[startIndex - 1][endIndex - 1])
+		{
+			caculateMatrix[startIndex - 1][endIndex - 1] = tempTimes;
+			processMatrix[startIndex - 1][endIndex - 2] = midIndex;
+		}
+	}
+	return caculateMatrix[startIndex - 1][endIndex - 1];
+}
+
+// TextCode
+int main_2()
+{
+	int matrixArray[] = { 30,35,15,5,10,20,25 };
+	// 15.2-1
+	//int matrixArray[] = { 5,10,3,12,5,50,6 };
+	int arrayLength = sizeof(matrixArray) / sizeof(matrixArray[0]);
+	//int num = MatrixChainOrder(arrayLength ,matrixArray);
+	int num = MemoizedMatrixChain(arrayLength, matrixArray);
+	printf_s("%d", num);
+	getchar();
+	return 0;
+}
