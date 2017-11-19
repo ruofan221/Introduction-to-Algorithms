@@ -1,0 +1,146 @@
+#include<stdio.h>
+#include<stdlib.h>
+
+// OPTIMAL-BST(p,q,n)
+double OptimalBST(double *proKey, double *proDummy, int numsSize)
+{
+	double **expectedCost = malloc(sizeof(double *) * (numsSize + 1));
+	double **subtreeCost = malloc(sizeof(double *) * (numsSize + 1));
+	int **rootMatrix = malloc(sizeof(int*) * numsSize);
+	for (int i = 0; i <= numsSize; i++)
+	{
+		expectedCost[i] = malloc(sizeof(double) * (numsSize + 1));
+		subtreeCost[i] = malloc(sizeof(double) * (numsSize + 1));
+		for (int j = 0; j <= numsSize;j++)
+		{
+			expectedCost[i][j] = subtreeCost[i][j] = 0;
+		}
+		expectedCost[i][i] = subtreeCost[i][i] = proDummy[i];
+	}
+	for (int i = 0; i < numsSize; i++)
+	{
+		rootMatrix[i] = malloc(sizeof(int) * numsSize);
+		for (int j = 0; j < numsSize; j++)
+		{
+			rootMatrix[i][j] = 0;
+		}
+		rootMatrix[i][i] = i + 1;
+	}
+
+	int subtreeEnd;
+	int startPos;
+	int endPos;
+	int matrixRowPosition;
+	int matrixColPosition;
+	int rootRow;
+	int rootCol;
+	int root;
+	int length;
+	double tempCost;
+
+	for (length = 1; length <= numsSize; length++)
+	{
+		subtreeEnd = numsSize - length + 1;
+		for (startPos = 1; startPos <= subtreeEnd; startPos++)
+		{
+			endPos = startPos + length - 1;
+			matrixRowPosition = startPos - 1;
+			matrixColPosition = endPos;
+			rootRow = startPos - 1;
+			rootCol = endPos - 1;
+			expectedCost[matrixRowPosition][matrixColPosition] = INT_MAX;
+			subtreeCost[matrixRowPosition][matrixColPosition] = subtreeCost[matrixRowPosition][matrixColPosition - 1]
+				+ proDummy[endPos] + proKey[endPos - 1];
+			if (startPos == endPos)
+			{
+				expectedCost[matrixRowPosition][matrixColPosition]
+					= expectedCost[matrixRowPosition][matrixColPosition - 1]
+					+ expectedCost[matrixRowPosition + 1][matrixColPosition]
+					+ subtreeCost[matrixRowPosition][matrixColPosition];
+			}
+			else
+			{
+				for (root = rootMatrix[rootRow][rootCol - 1]; root <= rootMatrix[rootRow + 1][rootCol]; root++)
+				{
+					tempCost = expectedCost[matrixRowPosition][root - 1]
+						+ expectedCost[root][matrixColPosition]
+						+ subtreeCost[matrixRowPosition][matrixColPosition];
+					if (tempCost < expectedCost[matrixRowPosition][matrixColPosition])
+					{
+						expectedCost[matrixRowPosition][matrixColPosition] = tempCost;	
+						rootMatrix[rootRow][rootCol] = root;
+					}
+				}
+			}
+		}
+	}
+
+	/*for (length = 1; length <= numsSize; length++)
+	{
+		subtreeEnd = numsSize - length + 1;
+		for (int i = 1; i <= subtreeEnd; i++)
+		{
+			startPos = i - 1;
+			endPos = startPos + length;
+			expectedCost[startPos][endPos] = INT_MAX;
+			subtreeCost[startPos][endPos] = subtreeCost[startPos][endPos - 1]
+				+ proKey[endPos - 1] + proDummy[endPos];
+
+			for (root = startPos; root < endPos; root++)
+			{
+				tempCost = expectedCost[startPos][root]
+					+ expectedCost[root + 1][endPos]
+					+ subtreeCost[startPos][endPos];
+
+				if (tempCost < expectedCost[startPos][endPos])
+				{
+					expectedCost[startPos][endPos] = tempCost;
+					rootMatrix[startPos][endPos - 1] = root + 1;
+				}
+			}
+		}
+	}*/
+
+	for (int i = 0; i <= numsSize; i++)
+	{
+		for (int j = 0; j <= numsSize;j++)
+		{
+			printf_s("%1.2lf\t", expectedCost[i][j]);
+		}
+		printf_s("\n");
+	}
+	printf_s("\n");
+	for (int i = 0; i <= numsSize; i++)
+	{
+		for (int j = 0; j <= numsSize; j++)
+		{
+			printf_s("%1.2lf\t", subtreeCost[i][j]);
+		}
+		printf_s("\n");
+	}
+	printf_s("\n");
+	for (int i = 0; i < numsSize; i++)
+	{
+		for (int j = 0; j < numsSize; j++)
+		{
+			printf_s("%d\t", rootMatrix[i][j]);
+		}
+		printf_s("\n");
+	}
+	printf_s("\n");
+
+	return expectedCost[1][numsSize];
+}
+
+int main_5()
+{
+	double proKey[] = { 0.15,0.10,0.05,0.10,0.20 };
+	double proDummy[] = { 0.05,0.10,0.05,0.05,0.05,0.10 };
+	/* 15.5-4
+	double proKey[] = { 0.04,0.06,0.08,0.02,0.10,0.12,0.14 };
+	double proDummy[] = { 0.06,0.06,0.06,0.06,0.05,0.05,0.05,0.05 };*/
+	int size = sizeof(proKey) / sizeof(double);
+	double re = OptimalBST(proKey, proDummy, size);
+	getchar();
+	return 0;
+}
